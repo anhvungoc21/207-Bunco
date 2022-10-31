@@ -9,19 +9,23 @@ public class PlayBunco {
 		Scanner input = new Scanner(System.in);
 		boolean playing = true;
 		boolean samePlayers = true;
+		int gamesPlayed = 0;
 		
 		int numPlayers = BuncoGame.getNumPlayers(input);
 		String[] playerNames = BuncoGame.getPlayerNames(input, numPlayers);
 		Player[] players = BuncoGame.createPlayers(playerNames);
 		
 		while (playing) {
+			
 			if (!samePlayers) {
+				gamesPlayed = 0;
 				numPlayers = BuncoGame.getNumPlayers(input);
 				playerNames = BuncoGame.getPlayerNames(input, numPlayers);
 				players = BuncoGame.createPlayers(playerNames);
 			}
 
-			BuncoGame game = new BuncoGame(BuncoGame.arrangePlayers(input, players), new DiceCup());
+			gamesPlayed++;
+			BuncoGame game = new BuncoGame(BuncoGame.arrangePlayers(input, players), new DiceCup(), gamesPlayed);
 			game.play();
 			
 			if (!BuncoGame.promptReplay(input)) {

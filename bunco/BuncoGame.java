@@ -1,5 +1,6 @@
 package bunco;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
@@ -26,12 +27,36 @@ public class BuncoGame {
 	 */
 	private static final int singlePlayerNum = 1;
 
+	/**
+	 * Constant for the number of points in a Bunco
+	 */
+	public static final int buncoPoints = 21;
+
+	/**
+	 * Constant for the number of points in a mini Bunco
+	 */
+	public static final int miniBuncoPoints = 5;
+	
+	/**
+	 * Private variable for the players in this Bunco game
+	 */
 	private Player[] players;
+	
+	/**
+	 * Private variable for the diceCup used in this game
+	 */
 	private DiceCup diceCup;
 	
-	public BuncoGame(Player[] players, DiceCup diceCup) {
+	/**
+	 * Private variable for the this game's number in a series of Bunco games
+	 */
+	private int gameNum;
+	
+	
+	public BuncoGame(Player[] players, DiceCup diceCup, int gameNum) {
 		this.players = players;
 		this.diceCup = diceCup;
+		this.gameNum = gameNum;
 	}
 	
 	
@@ -56,7 +81,7 @@ public class BuncoGame {
 	 * @param target Target value to match the roll of each dice
 	 * @return A boolean value of whether `rolls` represents a "mini Bunco"
 	 */
-	public static boolean isAMiniBunco(Integer[] rolls, int target) {
+	public static boolean isAMiniBunco(Integer[] rolls) {
 		return isABunco(rolls, miniBuncoVal);
 	}
 
@@ -84,48 +109,67 @@ public class BuncoGame {
 	}
 	
 	public static String getPlayerName(Scanner sc, int playerNum) {
-		System.out.printf("Please enter the name of player %d: ", playerNum);
-		return sc.next();
+			System.out.printf("Please enter the name of player %d: ", playerNum);
+			return sc.next();
 	}
 	
 	public static String[] getPlayerNames(Scanner sc, int numPlayers) {
-		Set<String> namesSet = new HashSet<>();
-		String[] names = new String[numPlayers];
-		for (int i = 0; i < numPlayers; i++) {
-			String thisName = getPlayerName(sc, i + 1);
-			while (namesSet.contains(thisName)) {
-				System.out.printf("There is already a player named \"%s\". Please choose again.%n", thisName);
-				thisName = getPlayerName(sc, i + 1);
+
+		if (numPlayers == 1) {
+			System.out.printf("Please enter your name: ");
+			String name = sc.next();
+			System.out.printf("Hello, %s! You will be playing against the Computer!%n", name);
+			return new String[] {name};
+		} else {
+			Set<String> namesSet = new HashSet<>();
+			String[] names = new String[numPlayers];
+			
+			for (int i = 0; i < numPlayers; i++) {
+				String thisName = getPlayerName(sc, i + 1);
+				while (namesSet.contains(thisName)) {
+					System.out.printf("There is already a player named \"%s\". Please choose again.%n", thisName);
+					thisName = getPlayerName(sc, i + 1);
+				}
+				names[i] = thisName;
+				namesSet.add(thisName);
 			}
-			names[i] = thisName;
-			namesSet.add(thisName);
+			return names;
 		}
-		return names;
 	}
 		
 	public static Player[] arrangePlayers(Scanner sc, Player[] players) {
+		System.out.printf("You will be rolling a dice to determine who goes first.%n%n");
 		Player[] retPlayers = new Player[players.length];
 		Player firstPlayer = players[0];
 		int highest = 0;
-		Dice dice = new Dice();
+		DiceCup diceCup = new DiceCup();
 		
 		for (int i = 0; i < players.length; i++) {
 			Player thisPlayer = players[i];
-			int thisRoll = thisPlayer.rollDice(dice);
-			if (thisRoll > highest) {
-				highest = thisRoll;
+			int thisRolls = DiceCup.getSum(thisPlayer.rollDiceCup(diceCup));
+			System.out.printf("A total of %d!%n", thisRolls);
+			if (thisRolls > highest) {
+				highest = thisRolls;
 				firstPlayer = thisPlayer;
 			}
 		}
 		
+		System.out.printf("%n%s rolled the highest dice! The order of play will be: ", firstPlayer.getName());
+		
 		retPlayers[0] = firstPlayer;
+		List<String> names = new ArrayList<>();
+		names.add(firstPlayer.getName());
+		
 		int index = 1;
 		for (Player player: players) {
 			if (player == firstPlayer) continue;
 			retPlayers[index] = player;
+			names.add(player.getName());
 			index++;
 		}
 		
+		System.out.println(String.join(", ", names));
+				
 		return retPlayers;
 	}
 	
@@ -143,21 +187,31 @@ public class BuncoGame {
 	}
 
 	
-	private void playRound(int curRound) {
+	private void playRound(DiceCup diceCup, int curRound) {
 		for (Player player: this.players) {
-			player.playRound();
+			System.out.printf("%s's turn! %n", player.getName());
+			player.playRound(diceCup, curRound);
 		}
 	}
 	
 	public void play() {
 		int curRound = startingRound;
 		while (curRound <= numRounds) {
-			this.playRound(curRound);
+			System.out.printf("%n----- ROUND %d -----%n", curRound);
+			this.playRound(this.diceCup, curRound);
 			curRound++;
+		}
+		
+		Player winner = getWinner();
+		winner.winGame();
+		
+		System.out.printf("You have played %d consecutive games so far!", gameNum);
+		for (Player player: this.players) {
+			player.reportGamesWon();
 		}
 	}
 	
-	private int getWinner() {
+	private Player getWinner() {
 		int highest = this.players[0].getPoints();
 		int winner = 0;
 		
@@ -170,7 +224,7 @@ public class BuncoGame {
 			}
 		}
 		
-		return winner;
+		return this.players[winner];
 	}
 	
 	private static boolean promptYesNo(Scanner sc, String message) {
