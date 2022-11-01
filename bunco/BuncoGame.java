@@ -146,15 +146,20 @@ public class BuncoGame {
 	public static String[] getPlayerNames(Scanner sc, int numPlayers) {
 		Set<String> namesSet = new HashSet<>();
 
+		// Single-player
 		if (numPlayers == 1) {
 			namesSet.add(Player.defaultName); // Prevent player from naming themselves Computer
+			
 			String name = getPlayerName(sc, numPlayers, numPlayers);
 			while (namesSet.contains(name)) {
 				System.out.printf("You cannot name yourself \"Computer\" in single-player. Please choose again.%n");
 				name = getPlayerName(sc, numPlayers, numPlayers);
 			}			
+			
 			System.out.printf("Hello, %s! You will be playing against the Computer!%n", name);
 			return new String[] {name};
+		
+		// Multi-player
 		} else {
 			String[] names = new String[numPlayers];
 			
@@ -181,9 +186,10 @@ public class BuncoGame {
 		System.out.printf("You will be rolling a dice to determine who goes first.%n%n");
 		Player[] retPlayers = new Player[players.length];
 		Player firstPlayer = players[0];
-		int highest = 0;
 		DiceCup diceCup = new DiceCup();
+		int highest = 0;
 		
+		// Each player rolls the dice
 		for (int i = 0; i < players.length; i++) {
 			Player thisPlayer = players[i];
 			int thisRolls = DiceCup.getSum(thisPlayer.rollDiceCup(diceCup));
@@ -196,6 +202,7 @@ public class BuncoGame {
 		
 		System.out.printf("%s rolled the highest dice! The order of play will be: ", firstPlayer.getName());
 		
+		// Announce order of play
 		retPlayers[0] = firstPlayer;
 		List<String> names = new ArrayList<>();
 		names.add(firstPlayer.getName());
@@ -236,6 +243,7 @@ public class BuncoGame {
 	 * @param curRound The numbering of the current round
 	 */
 	private void playRound(DiceCup diceCup, int curRound) {
+		// Each player plays their round
 		boolean bunco = false;
 		for (Player player: this.players) {
 			if (bunco) break;
@@ -244,6 +252,7 @@ public class BuncoGame {
 			
 		}
 		
+		// Announce round winner
 		System.out.printf("Round %d has ended! ", curRound);
 		List<Player> roundWinners = getRoundWinners();
 		if (roundWinners.size() == 1) {
@@ -253,6 +262,7 @@ public class BuncoGame {
 			System.out.printf("%s are this round's winners!%n", winnersStr);
 		}
 		
+		// Announce current scores
 		System.out.println("The current scores are:");		
 		for (Player player: this.players) {
 			player.reportScore();
@@ -266,7 +276,7 @@ public class BuncoGame {
 	 * @return An array of Players who won the game
 	 */
 	public String play() {
-		
+		// Play game by playing each round separately in `playRound`
 		int curRound = startingRound;
 		while (curRound <= numRounds) {
 			System.out.printf("%n----- ROUND %d -----%n", curRound);
@@ -274,6 +284,7 @@ public class BuncoGame {
 			curRound++;
 		}
 		
+		// Announce winner(s)
 		List<Player> winners = getWinners();
 		String winnerStr = "";
 		
@@ -290,10 +301,10 @@ public class BuncoGame {
 			winnerStr = joinPlayerNames(winners);
 			System.out.printf("%s are this game's winners!%n", winnerStr);
 		}
-
 		
 		System.out.printf("%n---------- END OF GAME ----------%n%n");
 		
+		// Report past games and winners
 		for (Player player: this.players) {
 			player.resetPoints();
 		}	
@@ -309,29 +320,6 @@ public class BuncoGame {
 		
 		return winnerStr;
 	}
-	
-	/**
-	 * Get the winners of a round of a bunco game
-	 * @return A Player array that is the winners of this round
-	 */
-	private List<Player> getRoundWinners() {
-		int highestDiff = this.players[0].getPoints() - this.players[0].getLastPoints();
-		List<Player> roundWinners = new ArrayList<>();
-		
-		for (Player player: this.players) {
-			int diff = player.getPoints() - player.getLastPoints();
-			if (diff > highestDiff) {
-				highestDiff = diff;
-				roundWinners.removeAll(roundWinners);
-				roundWinners.add(player);
-			} else if (diff == highestDiff) {
-				roundWinners.add(player);
-			}
-		}
-		
-		return roundWinners;
-	}
-	
 	
 	/**
 	 * Get the list of players with the highest `metric`
@@ -358,7 +346,6 @@ public class BuncoGame {
 		return winners;
 	}
 	
-	
 	/**
 	 * Get the Players with the most number of wins so far
 	 * @return A List of Players with the most number of wins so far
@@ -373,6 +360,28 @@ public class BuncoGame {
 	 */
 	private List<Player> getPastWinners() {
 		return this.getHighestPlayerMetric("wins");
+	}
+	
+	/**
+	 * Get the winners of a round of a bunco game
+	 * @return A Player array that is the winners of this round
+	 */
+	private List<Player> getRoundWinners() {
+		int highestDiff = this.players[0].getPoints() - this.players[0].getLastPoints();
+		List<Player> roundWinners = new ArrayList<>();
+		
+		for (Player player: this.players) {
+			int diff = player.getPoints() - player.getLastPoints();
+			if (diff > highestDiff) {
+				highestDiff = diff;
+				roundWinners.removeAll(roundWinners);
+				roundWinners.add(player);
+			} else if (diff == highestDiff) {
+				roundWinners.add(player);
+			}
+		}
+		
+		return roundWinners;
 	}
 
 	/**

@@ -176,9 +176,11 @@ public class Player {
 			System.out.println();
 		}
 		
+		// Add points officially
 		this.points += roundPoints;
 		System.out.printf("%s gained %d points this round!%n", this.name, roundPoints);
 		
+		// Print points at the end of round
 		if (bunco) {
 			System.out.printf("%s got a Bunco and Round %d is over! %s now has %d points in total!%n-----%n%n", this.name, round, this.name, this.points);
 			return true;
@@ -188,14 +190,23 @@ public class Player {
 		}
 	}
 
+	/**
+	 * Resets the points of this Player to 0
+	 */
 	public void resetPoints() {
 		this.points = 0;
 	}
  	
+	/**
+	 * Simulate winning a game by incrementing gamesWon
+	 */
 	public void winGame() {
 		this.gamesWon++;
 	}
 	
+	/**
+	 * Prints a formatted score report for this player
+	 */
 	void reportScore() {
 		System.out.printf("- %s has %d points%n", this.name, this.points);
 	}
